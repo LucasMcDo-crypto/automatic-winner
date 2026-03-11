@@ -1,4 +1,4 @@
-""""Programme principal qui créer une partie de UNO
+""""Programme principal qui créer un client complet à partir de server_main
 
 """
 import ui
