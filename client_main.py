@@ -2,6 +2,7 @@
 
 """
 import ui
+from fake_state import fake_state
 
 1. créer fenêtre Tk
 2. créer controller
