@@ -1,6 +1,6 @@
 """"Programme principal qui créer un client complet à partir de server_main
 
-"""
+Fait par Lucas"""
 import ui
 from fake_state import fake_state
 from server import client
