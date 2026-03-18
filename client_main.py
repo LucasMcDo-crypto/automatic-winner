@@ -11,7 +11,7 @@ import ui
 def initialisation(game_state):
     ui.affichage(game_state)
 
-def client_loop():
+def boucle_client():
     if game_change == True:
         ui.
         
