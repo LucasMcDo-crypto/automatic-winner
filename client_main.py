@@ -5,10 +5,6 @@ import ui
 from fake_state import fake_state
 from server import client
 
-1. créer fenêtre Tk
-2. créer controller
-3. connecter serveur
-4. lancer UI loop
 
 client = Client()
 client.connect()
