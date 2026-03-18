@@ -185,7 +185,29 @@ class Controle:
     def recevoir_game_state(self, state: dict):
         self.game_state = state
         self.mettre_a_jour()
-        
+
+
+def affichage(game_state):
+    """Affiche la UI avec un GameState."""
+
+    root = Tk.Tk()
+    root.title("MVC - UNO TEST")
+    root.state("zoomed")
+
+    root.rowconfigure(0, weight=1)
+    root.columnconfigure(0, weight=1)
+
+    controle = Controle(root)
+
+    # ---------------------------
+    # GAME STATE 
+    # ---------------------------
+  
+    # Injecte l'état 
+    controle.recevoir_game_state(game_state)
+
+    root.mainloop()
+
 
 def _test():
     """Affiche la UI avec un faux GameState (simulation serveur)."""
