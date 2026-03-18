@@ -8,26 +8,16 @@ import ui
 3. connecter serveur
 4. lancer UI loop
 
-def affichage(game_state):
-    """Affiche la UI avec un GameState."""
+def initialisation(game_state):
+    ui.affichage(game_state)
 
-    root = Tk.Tk()
-    root.title("MVC - UNO TEST")
-    root.state("zoomed")
-
-    root.rowconfigure(0, weight=1)
-    root.columnconfigure(0, weight=1)
-
-    controle = Controle(root)
-
-    # ---------------------------
-    # GAME STATE 
-    # ---------------------------
-  
-    # Injecte l'état 
-    controle.recevoir_game_state(game_state)
-
-    root.mainloop()
+def client_loop():
+    if game_change == True:
+        ui.
+        
+    else:
+        continue
 
 if __name__ == "__main__":
-    _test()
+    initialisation(fake_state)
+    client_loop(fake_state)
