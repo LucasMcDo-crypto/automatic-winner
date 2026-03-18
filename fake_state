@@ -1,25 +1,25 @@
-    fake_state = {
-        "discard": "Green-1",
-        "direction": 1,
-        "current_player": "Lucas",
-        "players": [
-            {"name": "Robert", "cards": 8},
-            {"name": "Joris", "cards": 2},
-            {"name": "Jean-Louis", "cards": 15},
-            {"name": "Chien", "cards": 7},
-            {"name": "Kevin", "cards": 10},
-            {"name": "Alexis", "cards": 0},
-            {"name": "Lucas", "cards": 4},
-            {"name": "JSP", "cards": 1},
-        ],
-        "your_hand": [
-            "Green-1",
-            "Green-1",
-            "Green-1",
-            "Green-1",
-            "Green-1",
-            "Green-1"
-        ],
-        "draw_stack": 0,
-        "winner": None
-    }
+fake_state = {
+    "discard": "Green-1",
+    "direction": 1,
+    "current_player": "Lucas",
+    "players": [
+        {"name": "Robert", "cards": 8},
+        {"name": "Joris", "cards": 2},
+        {"name": "Jean-Louis", "cards": 15},
+        {"name": "Chien", "cards": 7},
+        {"name": "Kevin", "cards": 10},
+        {"name": "Alexis", "cards": 0},
+        {"name": "Lucas", "cards": 4},
+        {"name": "JSP", "cards": 1},
+    ],
+    "your_hand": [
+        "Green-1",
+        "Green-1",
+        "Green-1",
+        "Green-1",
+        "Green-1",
+        "Green-1"
+    ],
+    "draw_stack": 0,
+    "winner": None
+}
