@@ -1,3 +1,7 @@
+"""Modèle de game_state par défaut utilisé pour tester le bon fonctionnement des différents modèles.
+
+Fait par Lucas"""
+
 fake_state = {
     "discard": "Green-1",
     "direction": 1,
