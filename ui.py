@@ -189,25 +189,18 @@ class Controle:
 
 
 def affichage(game_state):
-    """Affiche la UI avec un GameState."""
-
+    """Affiche la vue en fonction du game_state"""
     root = Tk.Tk()
-    root.title("MVC - UNO TEST")
-    root.state("zoomed")
+    root.title("Client")
 
     root.rowconfigure(0, weight=1)
     root.columnconfigure(0, weight=1)
 
     controle = Controle(root)
 
-    # ---------------------------
-    # GAME STATE 
-    # ---------------------------
-  
-    # Injecte l'état 
     controle.recevoir_game_state(game_state)
 
-    root.mainloop()
+    return root, controle
 
 
 def _test():
