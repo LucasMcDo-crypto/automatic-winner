@@ -4,6 +4,7 @@ Fait par Lucas"""
 import tkinter as Tk
 import math
 from PIL import Image, ImageTk
+from fake_state import fake_state
 
 
 class Model:
@@ -211,49 +212,8 @@ def affichage(game_state):
 
 def _test():
     """Affiche la UI avec un faux GameState (simulation serveur)."""
+    affichage(game_state)
 
-    root = Tk.Tk()
-    root.title("MVC - UNO TEST")
-    root.state("zoomed")
-
-    root.rowconfigure(0, weight=1)
-    root.columnconfigure(0, weight=1)
-
-    controle = Controle(root)
-
-    # ---------------------------
-    # GAME STATE FAKE (JSON réel)
-    # ---------------------------
-    fake_state = {
-        "discard": "Green-1",
-        "direction": 1,
-        "current_player": "Lucas",
-        "players": [
-            {"name": "Robert", "cards": 8},
-            {"name": "Joris", "cards": 2},
-            {"name": "Jean-Louis", "cards": 15},
-            {"name": "Chien", "cards": 7},
-            {"name": "Kevin", "cards": 10},
-            {"name": "Alexis", "cards": 0},
-            {"name": "Lucas", "cards": 4},
-            {"name": "JSP", "cards": 1},
-        ],
-        "your_hand": [
-            "Green-1",
-            "Green-1",
-            "Green-1",
-            "Green-1",
-            "Green-1",
-            "Green-1"
-        ],
-        "draw_stack": 0,
-        "winner": None
-    }
-
-    # Injecte l'état comme si reçu du serveur
-    controle.recevoir_game_state(fake_state)
-
-    root.mainloop()
 
 if __name__ == "__main__":
     _test()
