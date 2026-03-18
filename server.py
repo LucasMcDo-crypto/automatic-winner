@@ -1,8 +1,8 @@
 
+
 """Programme de chatroom de test. Changer l'adresse IP chez le client pour essayer le code.
 
-Il suffit de changer le type de données à envoyer afin de communiquer les règles du jeu avec les clients et le serveur.
-Actuellement, le programeme ne sert que de chatroom.
+Actuellement, le programme ne sert que de chatroom. Pour tester l'envoi du game_state, enlever le # de commentaire à la ligne 61.
 
 fait par Kevin DAO"""
 
@@ -25,6 +25,8 @@ class Host:
         
         self.clients: dict[socket.socket, str] = {}
         self.running = True
+
+        self.game_state = {}
         
 
     def start(self) -> None:
@@ -47,7 +49,7 @@ class Host:
         while self.running:
             try:
                 client, _ = self.server.accept()
-                nickname = client.recv(1024).decode()
+                nickname = client.recv(4192).decode()
 
                 self.clients[client] = nickname
 
@@ -56,6 +58,7 @@ class Host:
                     "nickname": nickname,
                     "message": f"{nickname} joined the game"
                 })
+                #self.broadcast(self.game_state)
                 
                 print("Connected by", self.clients[client])
                 
@@ -72,7 +75,7 @@ class Host:
 
         try:
             while True:
-                data = client.recv(1024)
+                data = client.recv(4192)
                 if not data:
                     break
 
@@ -105,7 +108,7 @@ class Host:
             
     def broadcast(self, message: dict) -> None:
         """Envoyer le message à tous les clients"""
-        data = json.dumps(message).encode()
+        data = (json.dumps(message) + "\n").encode()
 
         for client in list(self.clients):
             try:
@@ -148,7 +151,7 @@ class Client:
 
     def connect(self):
         """Connecter avec le serveur"""
-        self.test_socket.connect(("192.168.1.26", PORT))
+        self.test_socket.connect(("10.134.55.139", PORT))
         self.test_socket.sendall(self.nickname.encode())
         print("Connected to server")
 
@@ -185,19 +188,27 @@ class Client:
     
     def receive(self):
         """Recevoir les messages des autres clients"""
+        buffer = ""
+
         while self.running:
             try:
-                data = self.test_socket.recv(1024)
+                data = self.test_socket.recv(4192)
 
                 if not data:
                     break
 
-                msg = json.loads(data.decode())
+                buffer += data.decode()
 
-                if msg["type"] == "chat":
-                    print(f"{msg['nickname']} said : {msg['message']}")
-                else:
-                    print(msg["message"])
+                while "\n" in buffer:
+                    msg_str, buffer = buffer.split("\n", 1)
+                    msg = json.loads(msg_str)
+
+                    if msg['type'] == "chat":
+                        print(f"{msg['nickname']} said : {msg['message']}")
+                    elif msg['type'] == "state":
+                        print(msg)
+                    else:
+                        print(msg["message"])
 
             except (OSError, json.JSONDecodeError):
                 break
@@ -219,14 +230,42 @@ class Client:
     
     
 if __name__ == "__main__":
-    #print(ip)
     user = input("host or client ? \n")
+
     if user.lower() not in ("host", "client"):
         raise Exception("Misinput, try again")
+    
     match user.lower():
         case "host":
             host = Host()
+            host.game_state ={
+            "type": "state",
+            "discard": "Green-1",
+            "direction": 1,
+            "current_player": "Lucas",
+            "players": [
+                {"name": "Robert", "cards": 8},
+                {"name": "Joris", "cards": 2},
+                {"name": "Jean-Louis", "cards": 15},
+                {"name": "Chien", "cards": 7},
+                {"name": "Kevin", "cards": 10},
+                {"name": "Alexis", "cards": 0},
+                {"name": "Lucas", "cards": 4},
+                {"name": "JSP", "cards": 1},
+            ],
+            "your_hand": [
+                "Green-1",
+                "Green-1",
+                "Green-1",
+                "Green-1",
+                "Green-1",
+                "Green-1"
+            ],
+            "draw_stack": 0,
+            "winner": None
+        }
             host.start()
+            
         case "client":
             client = Client()
             client.start()
