@@ -13,7 +13,7 @@ def initialisation(game_state):
 
 def boucle_client():
     if game_change == True:
-        ui.
+        ui.controle.recevoir_game_state(game_state)
         
     else:
         continue
