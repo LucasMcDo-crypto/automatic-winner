@@ -61,7 +61,7 @@ class Vue:
         self.frame.columnconfigure(2, weight=2)
         
     def ma_main(self, list_main, état_main):
-        """Affiche toutes les cartesdu joueur concerné et autorise ou non la possibilité de les jouer."""
+        """Affiche toutes les cartes du joueur concerné et autorise ou non la possibilité de les jouer."""
         self.images_originales = []
         self.images_tk = []
         self.boutons_cartes = []
