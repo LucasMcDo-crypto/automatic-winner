@@ -3,7 +3,7 @@
 Fait par Lucas"""
 import ui
 from fake_state import fake_state
-from server import client
+from server import Client
 
 
 client = Client()
