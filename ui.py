@@ -205,7 +205,7 @@ def affichage(game_state):
 
 def _test():
     """Affiche la UI avec un faux GameState (simulation serveur)."""
-    affichage(game_state)
+    affichage(fake_state)
 
 
 if __name__ == "__main__":
