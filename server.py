@@ -1,8 +1,7 @@
-
-
 """Programme de chatroom de test. Changer l'adresse IP chez le client pour essayer le code.
 
-Actuellement, le programme ne sert que de chatroom. Pour tester l'envoi du game_state, enlever le # de commentaire à la ligne 61.
+Il suffit de changer le type de données à envoyer afin de communiquer les règles du jeu avec les clients et le serveur.
+Actuellement, le programeme ne sert que de chatroom. Lire ligne 190 pour essayer le changement du Game State.
 
 fait par Kevin DAO"""
 
@@ -34,14 +33,14 @@ class Host:
         print(f"Server started on ip address: {ip} and port: {PORT}")
 
         try:
-            self.accept_client()
+            self._accept_client()
         except KeyboardInterrupt:
             print("\nStopping server...")
         finally:
             self.stop()
 
         
-    def accept_client(self) -> None:
+    def _accept_client(self) -> None:
         """Accepter la connexion d'un client et reçoit son pseudonyme."""
         print("Server listening...")
         self.server.settimeout(1)
@@ -58,18 +57,17 @@ class Host:
                     "nickname": nickname,
                     "message": f"{nickname} joined the game"
                 })
-                #self.broadcast(self.game_state)
                 
                 print("Connected by", self.clients[client])
                 
-                thread = threading.Thread(target=self.handle_client, args=(client,), daemon=True)
+                thread = threading.Thread(target=self._handle_client, args=(client,), daemon=True)
                 thread.start()
                 
             except socket.timeout:
                 continue
 
             
-    def handle_client(self, client: socket.socket) -> None:
+    def _handle_client(self, client: socket.socket) -> None:
         """Gérer le reçu des messages et la déconnexion des clients."""
         nickname = self.clients.get(client, "Unknown")
 
@@ -78,17 +76,28 @@ class Host:
                 data = client.recv(4192)
                 if not data:
                     break
+                data_json = json.loads(data.decode())
 
-                self.broadcast(json.loads(data.decode()))
+                if data_json['type'] == "play":
+                    self.change_state(top_card=data_json['discard'], card_list=data_json['your_hand'])
+                    self.broadcast(self.game_state) # affichage de test pour le game state
+                else:
+                    self.broadcast(data_json)
 
         except ConnectionResetError:
             print(f"A connexion error occured with client {nickname}")
             
         finally:
-            self.disconnect_client(client)
+            self._disconnect_client(client)
+
+    
+    def change_state(self, top_card: str, card_list: list) -> None:
+        """Changer le game state avec la dernière carte jouée et les cartes restantes en main."""
+        self.game_state.update({"discard": top_card})
+        self.game_state.update({"your_hand": card_list})
 
 
-    def disconnect_client(self, client: socket.socket) -> None:
+    def _disconnect_client(self, client: socket.socket) -> None:
         """Gérer la déconnexion des clients"""
         nickname = self.clients.get(client, "Unknown")
         
@@ -112,12 +121,12 @@ class Host:
 
         for client in list(self.clients):
             try:
-                client.sendall(data)
+            client.sendall(data)
             except:
-                self.disconnect_client(client)
+                self._disconnect_client(client)
 
 
-    def stop(self):
+    def stop(self) -> None:
         """Gérer la fermeture du serveur et ferme tous les clients."""
         self.running = False
 
@@ -133,46 +142,53 @@ class Client:
     def __init__(self):
         
         self.test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.nickname = input("enter your nickname: ")
         self.running = True 
         
 
-    def start(self):
+    def start(self) -> None:
         """Activer la connexion et la gestion des messages"""
         try:
-            self.connect()
-            self.start_receiving()
-            self.send_loop()
+            self._connect()
+            self._start_receiving()
+            self._send_loop()
         except KeyboardInterrupt:
             print("\nClosing client...")
         finally:
             self.stop()
-
-
-    def connect(self):
-        """Connecter avec le serveur"""
-        self.test_socket.connect(("10.134.55.139", PORT))
+            
+    
+    def _send_nickname(self) -> None:
+        """Envoyer le pseudonyme au serveur"""
+        self.nickname = input("enter your nickname: ")
         self.test_socket.sendall(self.nickname.encode())
+
+
+    def _connect(self) -> None:
+        """Connecter avec le serveur"""
+        self.test_socket.connect((ip, PORT))
+        self._send_nickname()
         print("Connected to server")
 
 
-    def start_receiving(self):
+    def _start_receiving(self) -> None:
         """Recevoir plusieurs messages avec un thread"""
-        thread = threading.Thread(target=self.receive, daemon=True)
+        thread = threading.Thread(target=self._receive, daemon=True)
         thread.start()
 
     
-    def send_loop(self):
+    def _send_loop(self) -> None:
         """Envoyer un message au serveur qui l'affiche aux autres utilisateurs et déconnecter lorsque
            le client écrit 'quit'"""
         
-        print("type 'quit' to end connexion with server")
+        print("type 'quit' or press Ctrl+C to end connexion with server")
 
         while self.running:
             message = input()
             if message.lower() == "quit":
                 self.running = False
                 break
+            elif message.lower() == "send": # envoyer send pour tester le changement de Game State
+                self.send_state("Green-2", ["Red-2", "Blue-4"])
             
             msg = {
                 "type": "chat",
@@ -185,8 +201,22 @@ class Client:
             except OSError:
                 break
 
+
+    def send_state(self, card_played: str, list_card: list) -> None:
+        """Envoyer les informations du joueur au serveur"""
+        state = {
+            "type": "play",
+            "discard": card_played,
+            "your_hand": list_card
+        }
+
+        try:
+            self.test_socket.sendall(json.dumps(state).encode())
+        except OSError:
+            pass
+
     
-    def receive(self):
+    def _receive(self) -> None:
         """Recevoir les messages des autres clients"""
         buffer = ""
 
@@ -216,7 +246,7 @@ class Client:
         self.running = False
         
             
-    def stop(self):
+    def stop(self) -> None:
         """Gérer la déconnexion"""
         self.running = False
         
