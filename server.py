@@ -121,7 +121,7 @@ class Host:
 
         for client in list(self.clients):
             try:
-            client.sendall(data)
+                client.sendall(data)
             except:
                 self._disconnect_client(client)
 
