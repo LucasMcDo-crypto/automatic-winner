@@ -176,7 +176,8 @@ class Controle:
 
         self.vue.carte_en_jeu(self.game_state["discard"])
 
-        main = self.game_state["your_hand"]
+        joueur = next(p for p in self.game_state["players"] if p["name"] == self.joueur_nom)
+        main = joueur["hand"]
 
         etat = ["active"] * len(main)
 
