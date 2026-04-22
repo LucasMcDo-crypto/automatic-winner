@@ -1,7 +1,7 @@
 """Programme de chatroom de test. Changer l'adresse IP chez le client pour essayer le code.
 
 Il suffit de changer le type de données à envoyer afin de communiquer les règles du jeu avec les clients et le serveur.
-Actuellement, le programeme ne sert que de chatroom. Lire ligne 190 pour essayer le changement du Game State.
+Actuellement, le programeme ne sert que de chatroom.
 
 fait par Kevin DAO"""
 
@@ -48,9 +48,13 @@ class Host:
         while self.running:
             try:
                 client, _ = self.server.accept()
-                nickname = client.recv(4192).decode()
 
-                self.clients[client] = nickname
+                data = client.recv(4192)
+                data_json = json.loads(data.decode())
+
+                if data_json['type'] == "nickname":
+                    nickname = data_json['name']
+                    self.clients[client] = nickname
 
                 self.broadcast({
                     "type": "system",
@@ -157,16 +161,20 @@ class Client:
             self.stop()
             
     
-    def _send_nickname(self) -> None:
+    def send_nickname(self) -> None:
         """Envoyer le pseudonyme au serveur"""
         self.nickname = input("enter your nickname: ")
-        self.test_socket.sendall(self.nickname.encode())
+        msg = {
+            "type": "nickname",
+            "name": self.nickname
+        }
+        self.test_socket.sendall(json.dumps(msg).encode())
 
 
     def _connect(self) -> None:
         """Connecter avec le serveur"""
         self.test_socket.connect((ip, PORT))
-        self._send_nickname()
+        self.send_nickname()
         print("Connected to server")
 
 
@@ -180,7 +188,7 @@ class Client:
         """Envoyer un message au serveur qui l'affiche aux autres utilisateurs et déconnecter lorsque
            le client écrit 'quit'"""
         
-        print("type 'quit' or press Ctrl+C to end connexion with server")
+        print("type 'quit' or press Ctrl+C to end connexion with server\n")
 
         while self.running:
             message = input()
