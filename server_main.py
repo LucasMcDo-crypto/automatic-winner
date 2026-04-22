@@ -14,7 +14,7 @@ def Initialisation_Server():
   server.Host().start()
 
 def Initialisation_Client():
-  server.Client.start()
+  server.Client().start()
   game_state = server.Host.get_state
   Logic.Partie(game_state)
   
