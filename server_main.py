@@ -16,5 +16,6 @@ def Initialisation_Server():
 def Initialisation_Client():
   server.Client().start()
   game_state = server.Host.get_state
-  Logic.Partie(game_state)
+  liste_joueurs = [player["name"] for player in game_state["players"]]
+  Logic.Partie(liste_joueurs)
   
