@@ -38,6 +38,10 @@ class Host:
             print("\nStopping server...")
         finally:
             self.stop()
+            
+
+    def get_state(self) -> dict:
+        return self.game_state
 
         
     def _accept_client(self) -> None:
@@ -146,7 +150,7 @@ class Client:
     def __init__(self):
         
         self.test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.running = True 
+        self.running = True
         
 
     def start(self) -> None:
@@ -281,6 +285,7 @@ if __name__ == "__main__":
             "discard": "Green-1",
             "direction": 1,
             "current_player": "Lucas",
+            "player_number": 8,
             "players": [
                 {"name": "Robert", "cards": 8},
                 {"name": "Joris", "cards": 2},
