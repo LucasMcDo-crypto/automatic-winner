@@ -9,17 +9,16 @@ import socket
 import threading
 import json
 
-hostname = socket.gethostname()
-ip = socket.gethostbyname(hostname)
-PORT = 65432
-
 
 class Host:
     """classe du serveur 'host'"""
+    ip = socket.gethostbyname(socket.gethostname())
+    PORT = 65432
+
     def __init__(self):
         
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server.bind((ip , PORT))
+        self.server.bind((self.ip , self.PORT))
         self.server.listen()
         
         self.clients: dict[socket.socket, str] = {}
@@ -30,7 +29,7 @@ class Host:
 
     def start(self) -> None:
         """Lancer le serveur. Lorsque Ctrl+C est pressé, le programme est arrêté."""
-        print(f"Server started on ip address: {ip} and port: {PORT}")
+        print(f"Server started on ip address: {self.ip} and port: {self.PORT}")
 
         try:
             self._accept_client()
@@ -119,7 +118,7 @@ class Host:
         self.broadcast({
             "type": "system",
             "nickname": "",
-            "message": f"{nickname} left the chat"
+            "message": f"{nickname} left the game"
         })
 
             
@@ -149,7 +148,7 @@ class Client:
     """classe du client"""
     def __init__(self):
         
-        self.test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.running = True
         
 
@@ -172,12 +171,12 @@ class Client:
             "type": "nickname",
             "name": self.nickname
         }
-        self.test_socket.sendall(json.dumps(msg).encode())
+        self.socket.sendall(json.dumps(msg).encode())
 
 
     def _connect(self) -> None:
-        """Connecter avec le serveur"""
-        self.test_socket.connect((ip, PORT))
+        """Connecter le client au serveur serveur"""
+        self.socket.connect((Host.ip, Host.PORT))
         self.send_nickname()
         print("Connected to server")
 
@@ -192,7 +191,7 @@ class Client:
         """Envoyer un message au serveur qui l'affiche aux autres utilisateurs et déconnecter lorsque
            le client écrit 'quit'"""
         
-        print("type 'quit' or press Ctrl+C to end connexion with server\n")
+        print("type 'quit' or press Ctrl+C to end connexion with server")
 
         while self.running:
             message = input()
@@ -209,7 +208,7 @@ class Client:
             }
 
             try:
-                self.test_socket.sendall(json.dumps(msg).encode())
+                self.socket.sendall(json.dumps(msg).encode())
             except OSError:
                 break
 
@@ -223,7 +222,7 @@ class Client:
         }
 
         try:
-            self.test_socket.sendall(json.dumps(state).encode())
+            self.socket.sendall(json.dumps(state).encode())
         except OSError:
             pass
 
@@ -234,7 +233,7 @@ class Client:
 
         while self.running:
             try:
-                data = self.test_socket.recv(4192)
+                data = self.socket.recv(4192)
 
                 if not data:
                     break
@@ -263,11 +262,11 @@ class Client:
         self.running = False
         
         try:
-            self.test_socket.shutdown(socket.SHUT_RDWR)
+            self.socket.shutdown(socket.SHUT_RDWR)
         except:
             pass
 
-        self.test_socket.close()
+        self.socket.close()
         print("Connexion with server has been terminated")
     
     
