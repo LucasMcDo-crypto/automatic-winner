@@ -15,12 +15,11 @@ def Initialisation_Server():
 
 def Initialisation_Client():
   server.Client().start()
-  game_state = server.Host.get_state
-  liste_joueurs = [player["name"] for player in game_state["players"]]
-  Logic.Partie(liste_joueurs)
-  #Convertir le dict de fin de partie 
 
 def Game_Loop():
+  liste_joueurs = server.Host().get_player_list()
+  Logic.Partie(liste_joueurs)
+  #Convertir le dict de fin de partie 
   while (len(player["cards"]) == 0 for player in fake_state["players"]):
     def send_state_to_all(self):
 
