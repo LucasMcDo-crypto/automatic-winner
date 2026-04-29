@@ -4,6 +4,7 @@
 import server
 import Logic
 import game_state_empty
+from fake_state import fake_state
 
 1. créer GameServer
 2. écouter connexions (stocke les joueurs)
