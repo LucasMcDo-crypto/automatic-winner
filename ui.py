@@ -5,7 +5,10 @@ import tkinter as Tk
 import math
 from PIL import Image, ImageTk
 from fake_state import fake_state
+import os
 
+BASE_DIR = os.path.dirname(__file__)
+IMAGES_DIR = os.path.join(BASE_DIR, "images")
 
 class Model:
     def __init__(self):
@@ -66,7 +69,10 @@ class Vue:
         self.images_tk = []
         self.boutons_cartes = []
         for i in range(len(list_main)):
-            img = Image.open(f"{list_main[i]}.png")  # même image ou adapte selon besoin
+            img_path = os.path.join(IMAGES_DIR, f"{list_main[i]}.png")
+            if not os.path.exists(img_path):
+                print("Image introuvable :", img_path)
+            img = Image.open(img_path)
             self.images_originales.append(img)
 
             img_tk = ImageTk.PhotoImage(img)
