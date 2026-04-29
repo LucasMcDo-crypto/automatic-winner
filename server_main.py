@@ -22,6 +22,18 @@ def Initialisation_Client():
 
 def Game_Loop():
   while (len(player["cards"]) == 0 for player in fake_state["players"]):
-    
+    def send_state_to_all(self):
+
+    for client, nickname in self.clients.items():
+
+        msg = {
+            "type": "state",
+            "player_name": nickname,
+            "game_state": self.game_state
+        }
+
+        client.sendall(
+            (json.dumps(msg) + "\n").encode()
+        )
   #Phase où quelqu'un a gagné
   
