@@ -169,23 +169,25 @@ class Controle:
 
         noms = [p["name"] for p in self.game_state["players"]]
         nbr = [p["cards"] for p in self.game_state["players"]]
-
+        
         joueur_actif = noms.index(self.game_state["current_player"])
-
+        
         self.vue.dessiner(self.model.ratio, noms, nbr, joueur_actif)
-
+        
         self.vue.carte_en_jeu(self.game_state["discard"])
-
-        joueur = next(p for p in self.game_state["players"] if p["name"] == self.joueur_nom)
-        main = joueur["hand"]
-
+        
+        joueur = next(p for p in self.game_state["players"] if p["name"] == self.player_name)
+        
+        main = joueur["cards"]
+        
         etat = ["active"] * len(main)
-
+        
         self.vue.ma_main(main, etat)
         
         
-    def recevoir_game_state(self, state: dict):
+    def recevoir_game_state(self, state: dict, player_name: str):
         self.game_state = state
+        self.player_name = player_name
         self.mettre_a_jour()
 
 
