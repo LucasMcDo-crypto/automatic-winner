@@ -18,4 +18,5 @@ def Initialisation_Client():
   game_state = server.Host.get_state
   liste_joueurs = [player["name"] for player in game_state["players"]]
   Logic.Partie(liste_joueurs)
+  #Convertir le dict de fin de partie 
   
