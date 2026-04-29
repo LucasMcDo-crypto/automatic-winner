@@ -19,4 +19,9 @@ def Initialisation_Client():
   liste_joueurs = [player["name"] for player in game_state["players"]]
   Logic.Partie(liste_joueurs)
   #Convertir le dict de fin de partie 
+
+def Game_Loop():
+  while (len(player["cards"]) == 0 for player in fake_state["players"]):
+    
+  #Phase où quelqu'un a gagné
   
