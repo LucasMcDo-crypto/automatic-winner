@@ -7,8 +7,8 @@ from server import Client
 
 
 client = Client()
-client.connect()
-client.start_receiving()
+client._connect()
+client._start_receiving()
 
 root, controle = ui.affichage(fake_state)
 
@@ -17,10 +17,10 @@ controle.send_action = client.send_action
 
 def client_loop():
 
-    state = client.get_state()
+    game_state, player_name = client.get_state()
 
-    if state:
-        controle.recevoir_game_state(state)
+    if game_state:
+        controle.recevoir_game_state(game_state, player_name)
 
     root.after(50, client_loop)
 
