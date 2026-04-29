@@ -1,9 +1,8 @@
+"""Règles du jeu UNO
 
-"""
-04.02.2026
+Première version: 04.02.2026
+Dernière version: 25.04.2026
 Auteur: Alexis
-
-Définit les règles du jeu UNO et permet de jouer une partie UNO.
 """
 
 from __future__ import annotations
@@ -23,7 +22,7 @@ def _donnee(action: str, joueur: str, objet: str) -> dict:
             "objet": objet}
 
 
-class Couleur(Enum):
+class Couleur(str, Enum):
     """Couleur UNO"""
     ROUGE = 'r'
     BLEU = 'b'
@@ -37,21 +36,29 @@ class Couleur(Enum):
         valeurs = ()
         for member in cls.__members__:
             if cls.__members__[member].name != 'SPECIAL':
-                valeurs += (cls.__members__[member].value,)
+                valeurs += (cls.__members__[member],)
         return valeurs
     
     @classmethod
     def obtenir_special(cls) -> tuple:
         """Obtenir la couleur spéciale."""
-        return (cls.SPECIAL.value,)
+        return (cls.SPECIAL,)
     
     @classmethod
     def invalide_premier(cls) -> tuple:
         """Obtenir la couleur invalide pour être la première carte de défausse."""
         return cls.obtenir_special()
     
+    @classmethod
+    def obtenir(cls, couleur: str) -> Couleur:
+        """Obtenir la couleur à partir de sa valeur str."""
+        for member in cls.__members__:
+            if cls.__members__[member].value == couleur.lower():
+                return cls.__members__[member]
+        raise ValueError("Couleur invalide")
 
-class Chiffre(Enum):
+
+class Chiffre(str, Enum):
     """Chiffre UNO"""
     ZERO = '0'
     UN = '1'
@@ -75,18 +82,26 @@ class Chiffre(Enum):
         valeurs = ()
         for member in cls.__members__:
             if cls.__members__[member].name not in ('SPECIAL', 'PLUS_QUATRE'):
-                valeurs += (cls.__members__[member].value,)
+                valeurs += (cls.__members__[member],)
         return valeurs
     
     @classmethod
     def obtenir_special(cls) -> tuple:
         """Obtenir les chiffres spéciaux."""
-        return (cls.SPECIAL.value, cls.PLUS_QUATRE.value)
+        return (cls.SPECIAL, cls.PLUS_QUATRE)
     
     @classmethod
     def invalide_premier(cls) -> tuple:
         """Obtenir les chiffres invalides pour être la première carte de défausse."""
-        return (cls.obtenir_special(), cls.PLUS_DEUX.value, cls.CHANGE_SENS.value, cls.PASSE.value)
+        return (cls.obtenir_special(), cls.PLUS_DEUX, cls.CHANGE_SENS, cls.PASSE)
+    
+    @classmethod
+    def obtenir(cls, chiffre: str) -> Chiffre:
+        """Obtenir le chiffre à partir de sa valeur str."""
+        for member in cls.__members__:
+            if cls.__members__[member].value == chiffre:
+                return cls.__members__[member]
+        raise ValueError("Chiffre invalide")
  
 
 _COMBINAISONS_POSSIBLES = {Couleur.obtenir_normal(): Chiffre.obtenir_normal(),
@@ -104,10 +119,11 @@ def _verifier_combinaison(couleur: str, chiffre: str) -> bool:
 
 class Carte():
     """Carte UNO"""
-    couleur: str
-    chiffre: str
+    couleur: Couleur
+    chiffre: Chiffre
     
-    def __init__(self, couleur: str, chiffre: str):
+    def __init__(self, couleur: Couleur, chiffre: Chiffre):
+        """Créer une carte UNO avec une COULEUR et un CHIFFRE."""
         if couleur not in (Couleur.obtenir_special() + Couleur.obtenir_normal()):
             raise ValueError("Couleur invalide")
         if chiffre not in (Chiffre.obtenir_special() + Chiffre.obtenir_normal()):
@@ -116,9 +132,12 @@ class Carte():
             raise ValueError("La couleur et le chiffre ne peuvent pas être combinées.")
         self.couleur = couleur
         self.chiffre = chiffre
+    
+    def __repr__(self):
+        return "Carte(" + str(self.couleur) + ", " + str(self.chiffre) + ")"
         
     def __str__(self):
-        return self.couleur + self.chiffre
+        return str(self.couleur.value) + str(self.chiffre.value)
     
     def __eq__(self, other):
         if self.couleur == other.couleur and self.chiffre == other.chiffre:
@@ -139,13 +158,13 @@ class Carte():
         pioche = 0
         change_sens = False
         passe = 0
-        if self.couleur == Couleur.SPECIAL.value:
+        if self.couleur == Couleur.SPECIAL:
             choix = True
-        if self.chiffre in (Chiffre.PLUS_DEUX.value, Chiffre.PLUS_QUATRE.value):
+        if self.chiffre in (Chiffre.PLUS_DEUX, Chiffre.PLUS_QUATRE):
             pioche = int(self.chiffre)
-        if self.chiffre == Chiffre.CHANGE_SENS.value:
+        if self.chiffre == Chiffre.CHANGE_SENS:
             change_sens = True
-        if self.chiffre == Chiffre.PASSE.value:
+        if self.chiffre == Chiffre.PASSE:
             passe = 1
         return {"choix": choix,
                 "pioche": pioche,
@@ -156,7 +175,11 @@ class Deck():
     """Deck de cartes UNO"""
     cartes: list[Carte]
     
-    def __init__(self, speciales: int = NOMBRE_CARTES_SPECIALES, multiplicateur_deck: int = MULTIPLICATEUR_DECK):
+    def __init__(self, speciales: int = NOMBRE_CARTES_SPECIALES, multiplicateur: int = MULTIPLICATEUR_DECK):
+        """Créer un deck de cartes UNO.
+        SPECIALES est le nombre de cartes spéciales.
+        MULTIPLICATEUR multiplie chaque carte du deck.
+        """
         c = []
         for couleur in Couleur.obtenir_normal():
             for chiffre in Chiffre.obtenir_normal():
@@ -164,11 +187,17 @@ class Deck():
         for _ in range(speciales):
             c.append(Carte(Couleur.obtenir_special()[0], Chiffre.obtenir_special()[0]))
             c.append(Carte(Couleur.obtenir_special()[0], Chiffre.obtenir_special()[1]))
-        c = sample(c, counts=list(multiplicateur_deck for _ in range(len(c))), k=len(c))
+        c = sample(c, counts=list(multiplicateur for _ in range(len(c))), k=len(c))
         self.cartes = c
     
-    def __str__(self):
+    def __repr__(self):
         return str(list(self.cartes))
+    
+    def __str__(self):
+        cartes2 = []
+        for c in self.cartes:
+            cartes2.append(str(c))
+        return str(list(cartes2))
     
     def melanger(self) -> None:
         """Mélanger les cartes du deck."""
@@ -203,6 +232,7 @@ class Joueur():
     pioche: int
     
     def __init__(self, nom: str):
+        """Créer un joueur UNO avec un NOM."""
         self.nom = nom
         self.partie = None
         self.main = []
@@ -275,13 +305,13 @@ class Joueur():
                     
     def poser(self, carte: str|Carte) -> dict|None:
         """Poser une carte sur la défausse.
-        L'argument carte peut être la valeur str de la carte à jouer ou une instance de la classe Carte.
+        CARTE peut être la valeur str de la carte à jouer ou une instance de la classe Carte.
         Retourne les données de l'action. Retourne None si le joueur n'est pas dans
         une partie ou si le joueur n'est pas le joueur en jeu.
         Met à jour automatiquement la partie.
         """
         if type(carte) == str:
-            c = Carte(carte[0], carte[1:])
+            c = Carte(Couleur.obtenir(carte[0]), Chiffre.obtenir(carte[1:]))
         elif type(carte) == Carte:
             c = carte
         if self.partie is not None and self == self.partie.obtenir_prochain():
@@ -294,19 +324,23 @@ class Joueur():
             return _donnee("poser", self.nom, str(c))
         return None
     
-    def choisir(self, couleur: str) -> dict|None:
+    def choisir(self, couleur: Couleur|str) -> dict|None:
         """Choisir la couleur de la partie si le joueur a le droit.
+        COULEUR peut être la valeur str de la couleur ou une instance de la classe Couleur.
         Retourne les données de l'action.
-        Retourne None si le joueur n'est pas dans une partie.
+        Retourne None si le joueur n'est pas dans une partie ou si le joueur n'a pas le droit.
         """
-        if self.partie is not None:
-            if self.choix:
-                if couleur in Couleur.obtenir_normal():
-                    self.partie.carte_defausse.couleur = couleur
-                    self.choix = False
-                else:
-                    raise ValueError("Couleur invalide")
-            return _donnee("choisir", self.nom, couleur)
+        if self.partie is not None and self.choix:
+            if type(couleur) != Couleur:
+                c = Couleur.obtenir(couleur)
+            else:
+                c = couleur
+            if c in Couleur.obtenir_normal():
+                self.partie.carte_defausse.couleur = c
+                self.choix = False
+            else:
+                raise ValueError("Couleur invalide")
+            return _donnee("choisir", self.nom, str(c))
         return None
     
     def _mettre_a_jour(self, carte: Carte) -> None:
@@ -348,21 +382,38 @@ class Partie():
     joueurs: list[Joueur]
     carte_defausse: Carte
     
-    def __init__(self, *args, cartes_par_joueur: int = CARTES_PAR_JOUEUR):
+    def __init__(self, joueurs: tuple[str], robots: tuple[str]|None = None, cartes_par_joueur: int = CARTES_PAR_JOUEUR):
+        """Créer une partie.
+        JOUEURS est les noms des joueurs.
+        ROBOTS est le nom des robots.
+        CARTES_PAR_JOUEURS est le nombre de cartes par joueur.
+        """
         self.vainqueur = None
         self.deck = Deck()
         self.joueurs = []
         self._sens_horaire = True
         
-        for joueur in args:
+        for j in joueurs:
+            joueur = Joueur(j)
             joueur.partie = self
             joueur.main = list((self.deck.piocher() for _ in range(cartes_par_joueur)))
             self.joueurs.append(joueur)
+        
+        if robots is not None:
+            for r in robots:
+                joueur = Robot(r)
+                joueur.partie = self
+                joueur.main = list((self.deck.piocher() for _ in range(cartes_par_joueur)))
+                self.joueurs.append(joueur)
        
         self._joueur_jeu = self.joueurs[0]
         self._prochain_joueur = self._joueur_jeu
         self.deck.premiere_carte_valide()
-        self.carte_defausse = self.deck.piocher()
+        
+        c = self.deck.piocher()
+        if c is None:
+            raise Exception("Le deck est vide.")
+        self.carte_defausse = c
     
     def __str__(self):
         texte = ""
@@ -406,6 +457,12 @@ class Partie():
         else:
             i = (self.joueurs.index(self._joueur_jeu) - 1 - passe) % len(self.joueurs)
         joueur = self.joueurs[i]
+        if len(joueur.main) == 0:
+            for _ in range(len(self.joueurs)):
+                i += 1
+                joueur = self.joueurs[i]
+                if len(joueur.main) != 0:
+                    break
         joueur.pioche += pioche
         self._prochain_joueur = joueur
         return self.etat()
@@ -417,10 +474,7 @@ class Partie():
             
         
 def _creer_partie():
-    joueur1 = Joueur("joueur1")
-    robot1 = Robot("robot1")
-    partie = Partie(joueur1, robot1)
-    return partie
+    return Partie(("joueur1",), robots=("robot1",))
 
 
 def _jouer_partie(partie):
@@ -442,7 +496,7 @@ def _jouer_partie(partie):
                 couleur = input("Couleur: ")
                 print(joueur.choisir(couleur)) #le joueur choisit la couleur si il a le droit
         print()
-    print("Vainqueur: " + str(partie.vainqueur))
+    print("Vainqueur: " + str(partie.vainqueur.nom))
 
 
 if __name__ == "__main__":
