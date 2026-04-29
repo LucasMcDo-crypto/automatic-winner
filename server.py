@@ -8,6 +8,7 @@ fait par Kevin DAO"""
 import socket
 import threading
 import json
+from fake_state import fake_state
 
 
 class Host:
@@ -24,7 +25,7 @@ class Host:
         self.clients: dict[socket.socket, str] = {}
         self.running = True
 
-        self.game_state = {}
+        self.game_state =  {}
         
 
     def start(self) -> None:
@@ -40,7 +41,14 @@ class Host:
             
 
     def get_state(self) -> dict:
+        """Retourner le Game State actuel."""
         return self.game_state
+    
+
+    def get_player_list(self) -> list:
+        """Retourner la liste des pseudos des joueurs."""
+        player_list = [self.clients[client] for client in self.clients]
+        return player_list
 
         
     def _accept_client(self) -> None:
@@ -54,7 +62,7 @@ class Host:
 
                 data = client.recv(4192)
                 data_json = json.loads(data.decode())
-
+                
                 if data_json['type'] == "nickname":
                     nickname = data_json['name']
                     self.clients[client] = nickname
@@ -86,7 +94,7 @@ class Host:
                 data_json = json.loads(data.decode())
 
                 if data_json['type'] == "play":
-                    self.change_state(top_card=data_json['discard'], card_list=data_json['your_hand'])
+                    self.change_state(top_card=data_json['discard'], current_player=data_json['player_name'])
                     self.broadcast(self.game_state) # affichage de test pour le game state
                 else:
                     self.broadcast(data_json)
@@ -98,10 +106,12 @@ class Host:
             self._disconnect_client(client)
 
     
-    def change_state(self, top_card: str, card_list: list) -> None:
+    def change_state(self, top_card: str, current_player: str) -> None:
         """Changer le game state avec la dernière carte jouée et les cartes restantes en main."""
         self.game_state.update({"discard": top_card})
-        self.game_state.update({"your_hand": card_list})
+        for player in self.game_state["players"]:
+            if player["name"] == current_player:
+                player["cards"].remove(top_card)
 
 
     def _disconnect_client(self, client: socket.socket) -> None:
@@ -199,7 +209,7 @@ class Client:
                 self.running = False
                 break
             elif message.lower() == "send": # envoyer send pour tester le changement de Game State
-                self.send_state("Green-2", ["Red-2", "Blue-4"])
+                self.send_state("Blue-8")
             
             msg = {
                 "type": "chat",
@@ -213,12 +223,12 @@ class Client:
                 break
 
 
-    def send_state(self, card_played: str, list_card: list) -> None:
+    def send_state(self, card_played: str) -> None:
         """Envoyer les informations du joueur au serveur"""
         state = {
             "type": "play",
             "discard": card_played,
-            "your_hand": list_card
+            "player_name": self.nickname
         }
 
         try:
@@ -279,33 +289,7 @@ if __name__ == "__main__":
     match user.lower():
         case "host":
             host = Host()
-            host.game_state ={
-            "type": "state",
-            "discard": "Green-1",
-            "direction": 1,
-            "current_player": "Lucas",
-            "player_number": 8,
-            "players": [
-                {"name": "Robert", "cards": 8},
-                {"name": "Joris", "cards": 2},
-                {"name": "Jean-Louis", "cards": 15},
-                {"name": "Chien", "cards": 7},
-                {"name": "Kevin", "cards": 10},
-                {"name": "Alexis", "cards": 0},
-                {"name": "Lucas", "cards": 4},
-                {"name": "JSP", "cards": 1},
-            ],
-            "your_hand": [
-                "Green-1",
-                "Green-1",
-                "Green-1",
-                "Green-1",
-                "Green-1",
-                "Green-1"
-            ],
-            "draw_stack": 0,
-            "winner": None
-        }
+            host.game_state = fake_state
             host.start()
             
         case "client":
