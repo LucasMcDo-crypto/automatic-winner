@@ -10,13 +10,17 @@ import game_state_empty
 3. créer partie quand joueurs prêts
 4. boucle infinie
 
-def Initialisation_Server():
-  server.Host().start()
+def initialisation_server():
+  host = server.Host()
+  host.start()
+  return host
 
-def Initialisation_Client():
-  server.Client().start()
+def initialisation_client():
+  client = server.Client()
+  client.start()
+  return client
 
-def Game_Loop():
+def game_loop():
   liste_joueurs = server.Host().get_player_list()
   Logic.Partie(liste_joueurs)
   #Convertir le dict de fin de partie 
@@ -36,3 +40,17 @@ def Game_Loop():
         )
   #Phase où quelqu'un a gagné
   
+if __name__ == "__main__":
+    user = input("host or client ? \n")
+
+    if user.lower() not in ("host", "client"):
+        raise Exception("Misinput, try again")
+    
+    match user.lower():
+        case "host":
+            host = initialisation_server()
+            host.game_state = fake_state
+            
+        case "client":
+            client = initialisation_client()
+            
