@@ -2,7 +2,7 @@
 
 Fait par Lucas"""
 import tkinter as tk
-
+import server
 
 class Vue1(tk.Frame):
     """Menu principal"""
@@ -97,6 +97,21 @@ class Controle(tk.Tk):
         """Quitter"""
         self.destroy()
 
+def test():
+    server.user = input("host or client ? \n")
+
+    if server.user.lower() not in ("host", "client"):
+        raise Exception("Misinput, try again")
+    
+    match server.user.lower():
+        case "host":
+            server.host = Host()
+            server.host.game_state = fake_state
+            server.host.start()
+            
+        case "client":
+            server.client = Client()
+            server.client.start()
 
 if __name__ == "__main__":
     Controle().mainloop()
