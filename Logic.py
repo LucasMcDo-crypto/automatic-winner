@@ -28,7 +28,7 @@ class Couleur(str, Enum):
     BLEU = 'b'
     VERT = 'v'
     JAUNE = 'j'
-    SPECIAL = ''
+    SPECIAL = 'S'
     
     @classmethod
     def obtenir_normal(cls) -> tuple:
