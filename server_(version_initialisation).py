@@ -16,7 +16,7 @@ class Host:
     ip = socket.gethostbyname(socket.gethostname())
     PORT = 65432
 
-    def __init__(self):
+    def __init__(self, callback=None):
         
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((self.ip , self.PORT))
@@ -26,16 +26,28 @@ class Host:
         self.running = True
 
         self.game_state =  {}
+
+        # 🔥 AJOUT
+        self.callback = callback
         
+
+    # 🔥 AJOUT
+    def log(self, message: str) -> None:
+        """Envoyer un message soit à l'UI soit dans la console."""
+        if self.callback:
+            self.callback(message)
+        else:
+            print(message)
+
 
     def start(self) -> None:
         """Lancer le serveur. Lorsque Ctrl+C est pressé, le programme est arrêté."""
-        print(f"Server started on ip address: {self.ip} and port: {self.PORT}")
+        self.log(f"Server started on ip address: {self.ip} and port: {self.PORT}")
 
         try:
             self._accept_client()
         except KeyboardInterrupt:
-            print("\nStopping server...")
+            self.log("\nStopping server...")
         finally:
             self.stop()
             
@@ -53,7 +65,7 @@ class Host:
         
     def _accept_client(self) -> None:
         """Accepter la connexion d'un client et reçoit son pseudonyme."""
-        print("Server listening...")
+        self.log("Server listening...")
         self.server.settimeout(1)
 
         while self.running:
@@ -73,7 +85,7 @@ class Host:
                     "message": f"{nickname} joined the game"
                 })
                 
-                print("Connected by", self.clients[client])
+                self.log(f"Connected by {self.clients[client]}")
                 
                 thread = threading.Thread(target=self._handle_client, args=(client,), daemon=True)
                 thread.start()
@@ -95,12 +107,12 @@ class Host:
 
                 if data_json['type'] == "play":
                     self.change_state(top_card=data_json['discard'], current_player=data_json['player_name'])
-                    self.broadcast(self.game_state) # affichage de test pour le game state
+                    self.broadcast(self.game_state)
                 else:
                     self.broadcast(data_json)
 
         except ConnectionResetError:
-            print(f"A connexion error occured with client {nickname}")
+            self.log(f"A connexion error occured with client {nickname}")
             
         finally:
             self._disconnect_client(client)
@@ -123,7 +135,7 @@ class Host:
 
         client.close()
         
-        print(f"Connection closed with {nickname}")
+        self.log(f"Connection closed with {nickname}")
 
         self.broadcast({
             "type": "system",
@@ -151,8 +163,8 @@ class Host:
             client.close()
         
         self.server.close()
-        print("Server closed")
-        
+        self.log("Server closed")
+
 
 class Client:
     """classe du client"""
@@ -160,6 +172,7 @@ class Client:
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.running = True
+        self.last_state = None
         
 
     def start(self) -> None:
@@ -174,12 +187,12 @@ class Client:
             self.stop()
             
     
-    def send_nickname(self) -> None:
+    def send_nickname(self, name) -> None:
         """Envoyer le pseudonyme au serveur"""
-        self.nickname = input("enter your nickname: ")
+        self.nickname = name
         msg = {
             "type": "nickname",
-            "name": self.nickname
+            "name": name
         }
         self.socket.sendall(json.dumps(msg).encode())
 
@@ -256,8 +269,8 @@ class Client:
 
                     if msg['type'] == "chat":
                         print(f"{msg['nickname']} said : {msg['message']}")
-                    elif msg['type'] == "state":
-                        print(msg)
+                    elif msg["type"] == "state":
+                        self.last_state = msg["game_state"]
                     else:
                         print(msg["message"])
 
