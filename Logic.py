@@ -1,7 +1,7 @@
 """Règles du jeu UNO
 
 Première version: 04.02.2026
-Dernière version: 25.04.2026
+Dernière version: 06.05.2026
 Auteur: Alexis
 """
 
@@ -374,13 +374,12 @@ class Robot(Joueur):
                 if carte.compatible(self.partie.carte_defausse):
                     carte_jouer = carte
             if carte_jouer is not None:
-                self.main.remove(carte_jouer)
-                self._mettre_a_jour(carte_jouer)
+                self.poser(carte_jouer)
                 if self.choix:
                     self.choisir(self.main[0].couleur)
                 return _donnee("poser", self.nom, str(carte_jouer))
             else:
-                return self.piocher()
+                return self.passer_tour()
         return None
     
     
@@ -500,7 +499,7 @@ def _jouer_partie(partie):
             if carte in joueur.cartes_possibles():
                 print(joueur.poser(carte))
             else:
-                print(joueur.piocher()) #piocher si aucune carte ne peut être posée
+                print(joueur.passer_tour()) #piocher si aucune carte ne peut être posée
             if joueur.choix: #si le joueur peut choisir une couleur
                 couleur = input("Couleur: ")
                 print(joueur.choisir(couleur)) #le joueur choisit la couleur si il a le droit
