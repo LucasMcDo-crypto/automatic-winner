@@ -10,23 +10,20 @@ fake_state = {
         {
             "name": "Robert",
             "cards": [
-                "Red-3", "Blue-5", "Yellow-2", "Green-7",
-                "Wild", "Red-Skip", "Blue-1", "Yellow-9"
+                "r3", "b5", "j2", "v7", "r0", "b1", "j9"
             ]
         },
         {
             "name": "Joris",
             "cards": [
-                "Green-4", "Red-Draw2"
+                "v4", "r2"
             ]
         },
         {
             "name": "Jean-Louis",
             "cards": [
-                "Blue-0", "Blue-2", "Blue-7", "Green-5", "Green-9",
-                "Yellow-1", "Yellow-4", "Yellow-6", "Yellow-Reverse",
-                "Red-1", "Red-5", "Red-8", "Wild+4", "Green-Skip", "Blue-Reverse"
-            ]
+                "b0", "b2", "b7", "v5", "v9",
+                "j1", "j4", "j6"]
         },
         {
             "name": "Chien",
@@ -38,27 +35,22 @@ fake_state = {
         {
             "name": "Kevin",
             "cards": [
-                "Red-0", "Red-2", "Red-4", "Blue-3", "Blue-8",
-                "Green-6", "Yellow-5", "Yellow-8", "Wild+4", "Green-Reverse"
-            ]
+                "r0", "r2", "r4"]
         },
         {
             "name": "Alexis",
-            "cards": []
+            "cards": ["j3"]
         },
         {
             "name": "Lucas",
             "cards": [
-                "Green-1",
-                "Green-1",
-                "Green-1",
-                "Green-1"
+                "j1", "v1", "v1", "v1"
             ]
         },
         {
             "name": "JSP",
             "cards": [
-                "Red-9"
+                "r9"
             ]
         },
     ],
