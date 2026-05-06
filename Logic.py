@@ -277,15 +277,11 @@ class Joueur():
         """Piocher une carte du deck de la partie et l'ajouter à la main du joueur.
         Retourne les données de l'action. Retourne None si le joueur n'est pas dans
         une partie ou si le joueur n'est pas le joueur en jeu.
-        Met à jour automatiquement la partie.
-        Si le deck est vide, la main du joueur n'est pas changée mais la partie est mise à jour.
         """
         if self.partie is not None:
             carte = self.partie.deck.piocher()
             if carte is not None:
                 self.main.append(carte)
-            if self.pioche == 0:
-                self.partie.mettre_a_jour()
             return _donnee("piocher", self.nom, str(carte))
         return None
     
@@ -301,6 +297,19 @@ class Joueur():
                 d += (self.piocher(),)
                 self.pioche -= 1
             return d
+        return None
+
+    def passer_tour(self) -> dict|None:
+        """Piocher une carte du deck de la partie et l'ajouter à la main du joueur et passer le tour.
+        Retourne les données de l'action. Retourne None si le joueur n'est pas dans
+        une partie ou si le joueur n'est pas le joueur en jeu.
+        Met à jour automatiquement la partie.
+        Si le deck est vide, la main du joueur n'est pas changée mais la partie est mise à jour.
+        """
+        if self.partie is not None and self == self.partie.obtenir_prochain():
+            a = self.piocher()
+            self.partie.mettre_a_jour()
+            return a
         return None
                     
     def poser(self, carte: str|Carte) -> dict|None:
