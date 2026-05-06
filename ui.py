@@ -51,7 +51,8 @@ class Vue:
         self.images_originales1 = []
         self.images_tk1 = []
         self.boutons_cartes1 = []
-        img = Image.open(f"{carte}.png")  # même image ou adapte selon besoin
+        img_path = os.path.join(IMAGES_DIR, f"{carte}.png")
+        img = Image.open(img_path)
         self.images_originales1.append(img)
 
         img_tk = ImageTk.PhotoImage(img)
@@ -148,7 +149,7 @@ class Vue:
 
             self.canvas.create_text(x, y, text=noms_joueurs[i], fill=couleur, font=("Arial", 15))
 
-            self.canvas.create_text(x, y + offset, text=f"{nbr_cartes[i]} carte(s)", fill=couleur, font=("Arial", 12))
+            self.canvas.create_text(x, y + offset, text=f"{len(nbr_cartes[i])} carte(s)", fill=couleur, font=("Arial", 12))
 
 
 class Controle:
@@ -197,8 +198,8 @@ class Controle:
         self.mettre_a_jour()
 
 
-def affichage(game_state):
-    """Affiche la vue en fonction du game_state"""
+def affichage(game_state, player_name):
+    """Affiche la vue en fonction du game_state et du joueur qui possède la vue."""
     root = Tk.Tk()
     root.title("Client")
 
@@ -207,16 +208,16 @@ def affichage(game_state):
 
     controle = Controle(root)
 
-    controle.recevoir_game_state(game_state)
+    controle.recevoir_game_state(game_state, player_name)
 
     return root, controle
 
 
 def _test():
-    """Affiche la UI avec un faux GameState (simulation serveur)."""
-    affichage(fake_state)
+    """Affiche la UI avec un faux GameState et un joueur précis."""
+    root, controle = affichage(fake_state, "Lucas")
+    root.mainloop()
 
 
 if __name__ == "__main__":
     _test()
-
