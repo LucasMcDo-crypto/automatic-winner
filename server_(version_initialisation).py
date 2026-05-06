@@ -27,11 +27,9 @@ class Host:
 
         self.game_state =  {}
 
-        # 🔥 AJOUT
         self.callback = callback
         
 
-    # 🔥 AJOUT
     def log(self, message: str) -> None:
         """Envoyer un message soit à l'UI soit dans la console."""
         if self.callback:
@@ -187,12 +185,12 @@ class Client:
             self.stop()
             
     
-    def send_nickname(self, name) -> None:
+    def send_nickname(self, nickname: str) -> None:
         """Envoyer le pseudonyme au serveur"""
-        self.nickname = name
+        self.nickname = nickname
         msg = {
             "type": "nickname",
-            "name": name
+            "name": self.nickname
         }
         self.socket.sendall(json.dumps(msg).encode())
 
@@ -200,7 +198,6 @@ class Client:
     def _connect(self) -> None:
         """Connecter le client au serveur serveur"""
         self.socket.connect((Host.ip, Host.PORT))
-        self.send_nickname()
         print("Connected to server")
 
 
@@ -309,4 +306,3 @@ if __name__ == "__main__":
             client = Client()
             client.start()
             
-
