@@ -8,6 +8,7 @@ fait par Kevin DAO"""
 import socket
 import threading
 import json
+import queue
 from fake_state import fake_state
 
 
@@ -28,6 +29,7 @@ class Host:
         self.game_state =  {}
 
         self.callback = callback
+        self.action_queue = queue.Queue()
         
 
     def log(self, message: str) -> None:
@@ -103,7 +105,9 @@ class Host:
                     break
                 data_json = json.loads(data.decode())
 
-                if data_json['type'] == "play":
+                if data_json['type'] in ('PLAY_CARD', 'DRAW_CARD', 'CHOOSE_COLOR'):
+                    self.action_queue.put((nickname, data_json))
+                elif data_json['type'] == "play":
                     self.change_state(top_card=data_json['discard'], current_player=data_json['player_name'])
                     self.broadcast(self.game_state)
                 else:
@@ -192,7 +196,7 @@ class Client:
             "type": "nickname",
             "name": self.nickname
         }
-        self.socket.sendall(json.dumps(msg).encode())
+        self.socket.sendall((json.dumps(msg) + "\n").encode())
 
 
     def _connect(self) -> None:
@@ -228,7 +232,7 @@ class Client:
             }
 
             try:
-                self.socket.sendall(json.dumps(msg).encode())
+                self.socket.sendall((json.dumps(msg) + "\n").encode())
             except OSError:
                 break
 
@@ -242,7 +246,7 @@ class Client:
         }
 
         try:
-            self.socket.sendall(json.dumps(state).encode())
+            self.socket.sendall((json.dumps(msg) + "\n").encode())
         except OSError:
             pass
 
@@ -262,14 +266,18 @@ class Client:
 
                 while "\n" in buffer:
                     msg_str, buffer = buffer.split("\n", 1)
-                    msg = json.loads(msg_str)
-
-                    if msg['type'] == "chat":
-                        print(f"{msg['nickname']} said : {msg['message']}")
-                    elif msg["type"] == "state":
-                        self.last_state = msg["game_state"]
+                    try:
+                        msg = json.loads(msg_str)
+                    except json.JSONDecodeError:
+                        continue
+                    """if msg['type'] == "chat":
+                        print(f"{msg['nickname']} said : {msg['message']}")"""
+                    if msg.get("type") == "state":
+                        self.last_state = msg["state"]
+                    elif msg.get("type") == "choose_color":
+                        self.last_state = msg          # stocker pour client_loop
                     else:
-                        print(msg["message"])
+                        print(msg.get("message", str(msg)))   # get() évite le KeyError
 
             except (OSError, json.JSONDecodeError):
                 break
@@ -289,6 +297,17 @@ class Client:
         self.socket.close()
         print("Connexion with server has been terminated")
     
+    def get_state(self):
+        state = self.last_state
+        self.last_state = None
+        return state, self.nickname
+    
+    def send_action(self, action: dict):
+        try:
+            self.socket.sendall((json.dumps(action) + "\n").encode())
+        except OSError:
+            pass
+    
     
 if __name__ == "__main__":
     user = input("host or client ? \n")
@@ -306,3 +325,4 @@ if __name__ == "__main__":
             client = Client()
             client.start()
             
+
