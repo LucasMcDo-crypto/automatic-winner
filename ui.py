@@ -40,7 +40,7 @@ class Vue:
         self.canvas.bind("<Configure>", self.redimensionner)
         
         #Bouttons supplémentaires
-        self.button_bas2 = Tk.Button(self.frame, text="Passer le tour et prendre une carte", state="disabled", font=("Arial", 15), command=lambda: print("Passer le tour"))
+        self.button_bas2 = Tk.Button(self.frame, text="Passer le tour et prendre une carte", state="disabled", font=("Arial", 15), command=self.controle.passer_tour)
         self.button_bas2.grid(row=2, columnspan=1000, sticky="nsew")
         
 
@@ -48,6 +48,9 @@ class Vue:
     
     def carte_en_jeu(self, carte):
         """Affiche la carte donnée qui vient d'être jouée."""
+        if hasattr(self, "boutons_cartes1"):
+            for btn in self.boutons_cartes1:
+                btn.destroy()
         self.images_originales1 = []
         self.images_tk1 = []
         self.boutons_cartes1 = []
@@ -66,6 +69,11 @@ class Vue:
         
     def ma_main(self, list_main, état_main):
         """Affiche toutes les cartes du joueur concerné et autorise ou non la possibilité de les jouer."""
+        # Détruire les anciens boutons
+        if hasattr(self, "boutons_cartes"):
+            for btn in self.boutons_cartes:
+                btn.destroy()
+        
         self.images_originales = []
         self.images_tk = []
         self.boutons_cartes = []
@@ -150,27 +158,50 @@ class Vue:
             self.canvas.create_text(x, y, text=noms_joueurs[i], fill=couleur, font=("Arial", 15))
 
             self.canvas.create_text(x, y + offset, text=f"{len(nbr_cartes[i])} carte(s)", fill=couleur, font=("Arial", 12))
+    
+    def set_bouton_tour(self, etat):
+        self.button_bas2.configure(state=etat)
 
 
 class Controle:
     def __init__(self, root):
         self.model = Model()
         self.vue = Vue(root, self)
-        
+        self.game_state = None
+        self.player_name = None
+        self.send_action = None
     
     def jouer_carte(self, index):
-        carte = self.game_state["your_hand"][index]
+        joueur = next(
+            (j for j in self.game_state["players"]
+             if j["name"] == self.player_name),
+            None
+        )
+
+        if joueur is None:
+            print("Joueur introuvable")
+            return
+
+        carte = joueur["cards"][index]
 
         action = {
             "type": "PLAY_CARD",
             "card": carte
         }
 
-        print("SEND ACTION:", action)
-        
+        if self.send_action:
+            self.send_action(action)
+    
+    def passer_tour(self):
+        action = {
+            "type": "DRAW_CARD"
+        }
+
+        if self.send_action:
+            self.send_action(action)
 
     def mettre_a_jour(self):
-        """!!!En traveau!!! Gère le changement des variables présentent dans la vue."""
+        """Gère le changement des variables présentent dans la vue."""
         if not self.game_state:
             return
 
@@ -187,15 +218,34 @@ class Controle:
         
         main = joueur["cards"]
         
-        etat = ["active"] * len(main)
+        etat = joueur.get("etat_main", ["disabled"] * len(main))
+        etat_bouton = "normal" if self.player_name == self.game_state["current_player"] else "disabled"
+        
         
         self.vue.ma_main(main, etat)
+        self.vue.set_bouton_tour(etat_bouton)
         
         
     def recevoir_game_state(self, state: dict, player_name: str):
         self.game_state = state
         self.player_name = player_name
         self.mettre_a_jour()
+    
+    def demander_couleur(self):
+        """Popup pour choisir la couleur après une carte Wild."""
+        popup = Tk.Toplevel()
+        popup.title("Choisir une couleur")
+        popup.grab_set()
+        for nom, code, bg in [("Rouge","r","red"), ("Bleu","b","blue"),
+                               ("Vert","v","green"), ("Jaune","j","yellow")]:
+            Tk.Button(popup, text=nom, bg=bg, width=10,
+                      command=lambda c=code, p=popup: self._choisir_couleur(c, p)
+                      ).pack(side=Tk.LEFT, padx=5, pady=10)
+
+    def _choisir_couleur(self, code, popup):
+        if self.send_action:
+            self.send_action({"type": "CHOOSE_COLOR", "color": code})
+        popup.destroy()
 
 
 def affichage(game_state, player_name):
@@ -221,3 +271,4 @@ def _test():
 
 if __name__ == "__main__":
     _test()
+
