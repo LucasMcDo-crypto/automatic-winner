@@ -1,57 +1,132 @@
 """Programme principal qui créer une partie complète avec plusieurs joueurs
-
 """
 import server
 import Logic
-import game_state_empty
+from ui_initialisation import Controle
+import threading
 from fake_state import fake_state
-
-1. créer GameServer
-2. écouter connexions (stocke les joueurs)
-3. créer partie quand joueurs prêts
-4. boucle infinie
-
-def initialisation_server():
-  host = server.Host()
-  host.start()
-  return host
-
-def initialisation_client():
-  client = server.Client()
-  client.start()
-  return client
-
-def game_loop():
-  liste_joueurs = server.Host().get_player_list()
-  Logic.Partie(liste_joueurs)
-  #Convertir le dict de fin de partie 
-  while (len(player["cards"]) == 0 for player in fake_state["players"]):
-    def send_state_to_all(self):
-
-    for client, nickname in self.clients.items():
-
-        msg = {
+ 
+ 
+def game_loop(host, app):
+    noms = host.get_player_list()
+    if len(noms) < 2:
+        app.afficher("Il faut au moins 2 joueurs !")
+        return
+ 
+    partie = Logic.Partie(tuple(noms))
+    app.afficher(f"Partie lancée avec {noms}")
+ 
+    while partie.vainqueur is None:
+        joueur = partie.obtenir_prochain()          # avance le tour dans Logic
+        game_state = creer_game_state(partie)
+        host.broadcast({
             "type": "state",
-            "player_name": nickname,
-            "game_state": self.game_state
-        }
-
-        client.sendall(
-            (json.dumps(msg) + "\n").encode()
-        )
-  #Phase où quelqu'un a gagné
-  
+            "state": game_state
+        })
+ 
+        # Attendre l'action du bon joueur (bloquant, dans le thread séparé)
+        while True:
+            player_name, action = host.action_queue.get()
+            if player_name == joueur.nom:
+                break
+ 
+        # Gère le cas où on pose une carte
+        if action["type"] == "PLAY_CARD":
+            try:
+                joueur.poser(action["card"])
+ 
+                # Si la carte demande un choix de couleur
+                if joueur.choix:
+                    host.broadcast({
+                        "type": "choose_color",
+                        "player": joueur.nom
+                    })
+ 
+                    while True:
+                        player_name, action = host.action_queue.get()
+                        if (
+                            player_name == joueur.nom
+                            and action["type"] == "CHOOSE_COLOR"
+                        ):
+                            joueur.choisir(action["color"])
+                            break
+ 
+            except ValueError as e:
+                print(f"Carte invalide : {e}")
+ 
+        # Gère le cas où le joueur prend une carte et passe son tour
+        elif action["type"] == "DRAW_CARD":
+            joueur.piocher()
+ 
+    # Diffuser l'état final avec le gagnant
+    host.broadcast({
+        "type": "state",
+        "state": creer_game_state(partie)
+    })
+ 
+ 
+def on_game_start(host, app):
+    """Appelé quand le host clique sur 'Lancer la partie'."""
+    thread = threading.Thread(
+        target=game_loop,
+        args=(host, app),
+        daemon=True
+    )
+    thread.start()
+ 
+ 
+def creer_game_state(partie):
+    """Convertit une instance de Logic.Partie en game_state JSON-compatible."""
+ 
+    players = []
+ 
+    for joueur in partie.joueurs:
+ 
+        # Cartes jouables ou non
+        etat_main = []
+ 
+        if joueur == partie._joueur_jeu:
+            cartes_possibles = joueur.cartes_possibles()
+            for carte in joueur.main:
+                if str(carte) in cartes_possibles:
+                    etat_main.append("normal")
+                else:
+                    etat_main.append("disabled")
+        else:
+            etat_main = ["disabled"] * len(joueur.main)
+ 
+        players.append({
+            "name": joueur.nom,
+            "cards": [str(carte) for carte in joueur.main],
+            "etat_main": etat_main
+        })
+ 
+    # Calcul de la défausse — EN DEHORS de la boucle for
+    # Si la carte est un Wild (ss) ou Wild+4 (s+4), Logic a pu changer
+    # sa couleur via choisir() : on force le préfixe 's' pour retrouver
+    # le bon nom de fichier image.
+    defausse = partie.carte_defausse
+    if defausse.chiffre in (Logic.Chiffre.SPECIAL, Logic.Chiffre.PLUS_QUATRE):
+        discard_str = 's' + str(defausse.chiffre)   # 'ss' ou 's+4'
+    else:
+        discard_str = str(defausse)
+ 
+    game_state = {
+        "discard": discard_str,
+        "direction": 1 if partie._sens_horaire else -1,
+        "current_player": partie._joueur_jeu.nom,
+        "players": players,
+        "draw_stack": partie._joueur_jeu.pioche,
+        "winner": None if partie.vainqueur is None else partie.vainqueur.nom
+    }
+ 
+    return game_state
+ 
+ 
+def main():
+    app = Controle(on_game_start=lambda: on_game_start(app.host, app))
+    app.mainloop()
+ 
+ 
 if __name__ == "__main__":
-    user = input("host or client ? \n")
-
-    if user.lower() not in ("host", "client"):
-        raise Exception("Misinput, try again")
-    
-    match user.lower():
-        case "host":
-            host = initialisation_server()
-            host.game_state = fake_state
-            
-        case "client":
-            client = initialisation_client()
-            
+    main()
