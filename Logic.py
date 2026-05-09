@@ -511,3 +511,4 @@ if __name__ == "__main__":
     exemple = _creer_partie()
     _jouer_partie(exemple)
 
+
