@@ -5,6 +5,7 @@ import tkinter as tk
 import threading
 import server
 from fake_state import fake_state
+from game_state_empty import game_state_empty
 
 start_game_state = fake_state
 
@@ -54,16 +55,26 @@ class Vue_Host(tk.Frame):
 
         self.titre = tk.Label(self, text="Host")
         self.texte = tk.Label(self, text="")
+        self.bouton_lancement = tk.Button(self, text="Lancer la partie", command=lambda: self.lancer_partie(), bg="green")
         self.bouton_retour = tk.Button(self, text="Retour", command=lambda: self.controle.retour_host())
         self.bouton_quitter = tk.Button(self, text="Quitter", command=self.controle.quitter)
 
-        self.titre.grid(row=0, column=1)
-        self.texte.grid(row=1, columnspan=2)
-        self.bouton_retour.grid(row=2, column=0)
-        self.bouton_quitter.grid(row=2, column=1)
+        self.titre.grid(row=0, column=0, columnspan=2)
+        self.texte.grid(row=1, columnspan=20)
+        self.bouton_lancement.grid(row=2, column=0, columnspan=2, sticky="nsew")
+        self.bouton_retour.grid(row=3, column=0)
+        self.bouton_quitter.grid(row=3, column=1)
 
     def afficher(self, message):
+        """Affiche les différents messages de connexion."""
         self.texte.config(text=message)
+    
+    def lancer_partie(self):
+        """"""
+        if self.controle.on_game_start:
+            self.controle.on_game_start()
+        else:
+            self.afficher("Aucune partie configurée.")
 
 
 class Vue_Client(tk.Frame):
@@ -76,19 +87,16 @@ class Vue_Client(tk.Frame):
         self.titre = tk.Label(self, text="Client")
         self.entree = tk.Entry(self)
         self.texte = tk.Label(self, text="")
-
-        # Bouton pour envoyer le pseudo
         self.bouton_pseudo = tk.Button(self, text="Valider pseudo", command=self.envoyer_pseudo)
-
         self.bouton_retour = tk.Button(self, text="Retour", command=lambda: self.controle.retour_client())
         self.bouton_quitter = tk.Button(self, text="Quitter", command=self.controle.quitter)
 
-        self.titre.grid(row=0, column=1)
-        self.entree.grid(row=1, column=1)
-        self.bouton_pseudo.grid(row=2, column=1)
-        self.texte.grid(row=3, columnspan=2)
-        self.bouton_retour.grid(row=4, column=0)
-        self.bouton_quitter.grid(row=4, column=1)
+        self.titre.grid(row=0, column=0, columnspan=2)
+        self.entree.grid(row=1, column=0, columnspan=2)
+        self.bouton_pseudo.grid(row=2, column=0, columnspan=2)
+        self.texte.grid(row=3, columnspan=20)
+        self.bouton_retour.grid(row=4, column=0, sticky="nsew")
+        self.bouton_quitter.grid(row=4, column=1, sticky="nsew")
 
     def envoyer_pseudo(self):
         pseudo = self.entree.get()
@@ -103,6 +111,8 @@ class Vue_Client(tk.Frame):
 
         try:
             self.controle.client.send_nickname(pseudo)
+            self.controle.player_name = pseudo
+            self.controle.on_client_ready(self.controle.client, pseudo)
             self.afficher(f"Connecté en tant que {pseudo}")
         except Exception:
             self.afficher("Connexion au serveur en cours...")
@@ -114,8 +124,10 @@ class Vue_Client(tk.Frame):
 class Controle(tk.Tk):
     """Contrôle du programme"""
 
-    def __init__(self):
+    def __init__(self, on_game_start=None, on_client_ready=None):
+        self.on_client_ready = on_client_ready
         super().__init__()
+        self.on_game_start = on_game_start
 
         self.title("UNO")
         self.host = None
@@ -165,3 +177,4 @@ class Controle(tk.Tk):
 
 if __name__ == "__main__":
     Controle().mainloop()
+
