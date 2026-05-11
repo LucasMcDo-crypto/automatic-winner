@@ -5,7 +5,6 @@ import tkinter as tk
 import threading
 import server
 from fake_state import fake_state
-from game_state_empty import game_state_empty
 
 start_game_state = fake_state
 
