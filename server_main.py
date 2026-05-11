@@ -1,5 +1,5 @@
 """Programme principal qui créer une partie complète avec plusieurs joueurs
-"""
+Fait par Lucas"""
 import server
 import Logic
 from ui_initialisation import Controle
@@ -17,18 +17,26 @@ def game_loop(host, app):
     app.afficher(f"Partie lancée avec {noms}")
  
     while partie.vainqueur is None:
-        joueur = partie.obtenir_prochain()          # avance le tour dans Logic
+
+        joueur = partie.obtenir_prochain()
+
+        # appliquer immédiatement les +2/+4
+        joueur.piocher_debut()
+
+        # envoyer l'état APRÈS mise à jour complète
         game_state = creer_game_state(partie)
+
         host.broadcast({
             "type": "state",
             "state": game_state
         })
- 
-        # Attendre l'action du bon joueur (bloquant, dans le thread séparé)
+
         while True:
             player_name, action = host.action_queue.get()
             if player_name == joueur.nom:
                 break
+        
+        joueur.piocher_debut()
  
         # Gère le cas où on pose une carte
         if action["type"] == "PLAY_CARD":
@@ -107,16 +115,12 @@ def creer_game_state(partie):
     # sa couleur via choisir() : on force le préfixe 's' pour retrouver
     # le bon nom de fichier image.
     defausse = partie.carte_defausse
-    if defausse.chiffre in (Logic.Chiffre.SPECIAL):
+    if defausse.chiffre == Logic.Chiffre.SPECIAL:
         discard_str = 'ss'  # 'ss' 
-        print(discard_str)
-    
-    elif defausse.chiffre in (Logic.Chiffre.PLUS_QUATRE):
+    elif defausse.chiffre == Logic.Chiffre.PLUS_QUATRE:
         discard_str = 's+4' #'s+4'
-        print(discard_str)
     else:
         discard_str = str(defausse)
-        print(discard_str + "2")
  
     game_state = {
         "discard": discard_str,
@@ -137,4 +141,3 @@ def main():
  
 if __name__ == "__main__":
     main()
-
