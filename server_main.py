@@ -56,7 +56,8 @@ def game_loop(host, app):
  
         # Gère le cas où le joueur prend une carte et passe son tour
         elif action["type"] == "DRAW_CARD":
-            joueur.piocher()
+            joueur.passer_tour()
+            
  
     # Diffuser l'état final avec le gagnant
     host.broadcast({
@@ -106,10 +107,16 @@ def creer_game_state(partie):
     # sa couleur via choisir() : on force le préfixe 's' pour retrouver
     # le bon nom de fichier image.
     defausse = partie.carte_defausse
-    if defausse.chiffre in (Logic.Chiffre.SPECIAL, Logic.Chiffre.PLUS_QUATRE):
-        discard_str = 's' + str(defausse.chiffre)   # 'ss' ou 's+4'
+    if defausse.chiffre in (Logic.Chiffre.SPECIAL):
+        discard_str = 'ss'  # 'ss' 
+        print(discard_str)
+    
+    elif defausse.chiffre in (Logic.Chiffre.PLUS_QUATRE):
+        discard_str = 's+4' #'s+4'
+        print(discard_str)
     else:
         discard_str = str(defausse)
+        print(discard_str + "2")
  
     game_state = {
         "discard": discard_str,
@@ -130,3 +137,4 @@ def main():
  
 if __name__ == "__main__":
     main()
+
