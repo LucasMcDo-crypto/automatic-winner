@@ -6,7 +6,9 @@ from ui_initialisation import Controle as LobbyControle
 import threading
 
 def main():
+    """Gère le lien complet entre server_main et les ui des joueurs une fois l'initialisation des rôles terminée."""
     def on_client_ready(client, pseudo):
+        """Lance la fonction ouvrir_jeu une fois le game_state reçu."""
         client._start_receiving()
 
         def attendre_et_ouvrir():
@@ -18,11 +20,13 @@ def main():
         threading.Thread(target=attendre_et_ouvrir, daemon=True).start()
 
     def ouvrir_jeu(client, state, player_name):
+        """Détruit l'interface de ui_initialisation et la remplace par celle de ui avec le joueur qu'elle doit gérer."""
         lobby.destroy()
         root, controle = affichage(state, player_name)
         controle.send_action = client.send_action
 
         def client_loop():
+            """Traite chaque réception de game_state et gère le cas où le joueur doit choisir une couleur."""
             gs, pn = client.get_state()
             if gs:
                 if isinstance(gs, dict) and gs.get("type") == "choose_color":
