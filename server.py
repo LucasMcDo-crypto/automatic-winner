@@ -1,7 +1,4 @@
-"""Programme de chatroom de test. Changer l'adresse IP chez le client pour essayer le code.
-
-Il suffit de changer le type de données à envoyer afin de communiquer les règles du jeu avec les clients et le serveur.
-Actuellement, le programeme ne sert que de chatroom.
+"""Programme de communication entre un serveur et plusieurs clients.
 
 fait par Kevin DAO"""
 
@@ -173,7 +170,7 @@ class Client:
     def __init__(self):
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.running = True
+        self.running = False
         self.last_state = None
         
 
@@ -201,7 +198,8 @@ class Client:
 
     def _connect(self) -> None:
         """Connecter le client au serveur serveur"""
-        self.socket.connect((Host.ip, Host.PORT))
+        self.socket.connect(('10.134.54.121', Host.PORT))
+        self.running = True
         print("Connected to server")
 
 
@@ -246,7 +244,7 @@ class Client:
         }
 
         try:
-            self.socket.sendall((json.dumps(msg) + "\n").encode())
+            self.socket.sendall((json.dumps(state) + "\n").encode())
         except OSError:
             pass
 
