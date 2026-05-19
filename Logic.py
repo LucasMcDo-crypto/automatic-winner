@@ -35,7 +35,7 @@ class Couleur(str, Enum):
         """Obtenir les couleurs. La couleur spéciale n'est pas prise en compte."""
         valeurs = ()
         for member in cls.__members__:
-            if cls.__members__[member].name != 'SPECIAL':
+            if cls.__members__[member] != cls.SPECIAL:
                 valeurs += (cls.__members__[member],)
         return valeurs
     
@@ -81,7 +81,7 @@ class Chiffre(str, Enum):
         """Obtenir les chiffres. Les chiffres spéciaux ne sont pas pris en compte."""
         valeurs = ()
         for member in cls.__members__:
-            if cls.__members__[member].name not in ('SPECIAL', 'PLUS_QUATRE'):
+            if cls.__members__[member] not in (cls.SPECIAL, cls.PLUS_QUATRE):
                 valeurs += (cls.__members__[member],)
         return valeurs
     
